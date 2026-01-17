@@ -1,0 +1,13 @@
+@import "tailwindcss";
+
+* {
+  border-color: rgb(55 65 81);
+}
+
+body {
+  background-color: rgb(15 23 42);
+  color: rgb(248 250 252);
+  font-feature-settings: "rlig" 1, "calt" 1;
+  margin: 0;
+  padding: 0;
+}

@@ -1,0 +1,24 @@
+FireBoss:
+  Type: BLAZE
+  Display: '&cFire Boss'
+  Health: 500
+  Damage: 15
+  Armor: 10
+  BossBar:
+    Enabled: true
+    Title: 'Fire Boss'
+    Color: RED
+    Style: SEGMENTED_12
+
+IceMinion:
+  Type: STRAY
+  Display: '&bIce Minion'
+  Health: 100
+  Damage: 8
+  Armor: 5
+
+TestZombie:
+  Type: ZOMBIE
+  Display: 'Test Zombie'
+  Health: 20
+  Damage: 5

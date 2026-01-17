@@ -3,7 +3,8 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches:
-      - claude/start-mythicmobs-gui-hdfpz
+      - main
+      - master
   workflow_dispatch:
 
 permissions:

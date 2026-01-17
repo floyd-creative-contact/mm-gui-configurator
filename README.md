@@ -24,7 +24,21 @@ A web-based GUI editor for MythicMobs (Minecraft plugin) that allows users to vi
 - **State Management**: Zustand
 - **YAML Processing**: js-yaml
 
-## 📦 Installation
+## 🌐 Live Demo
+
+**GitHub Pages**: The app is automatically deployed to GitHub Pages on every push.
+
+After pushing to the branch, the site will be available at:
+`https://floyd-creative-contact.github.io/mm-gui-configurator/`
+
+### Enabling GitHub Pages (First Time Setup)
+
+1. Go to your repository settings on GitHub
+2. Navigate to **Settings** → **Pages**
+3. Under **Source**, select **GitHub Actions**
+4. The workflow will automatically build and deploy on every push
+
+## 📦 Local Development
 
 ```bash
 # Install dependencies

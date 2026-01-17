@@ -1,0 +1,752 @@
+import { MechanicSchema } from './types';
+
+/**
+ * Top 20 most commonly used MythicMobs mechanics
+ * Based on official documentation and community usage patterns
+ */
+export const MECHANICS: Record<string, MechanicSchema> = {
+  damage: {
+    name: 'damage',
+    aliases: ['d'],
+    category: 'Entity Targeting',
+    description: 'Deals damage to target entities',
+    targetType: 'entity',
+    requiresTarget: true,
+    parameters: {
+      amount: {
+        type: 'number',
+        required: true,
+        default: 1,
+        description: 'Amount of damage to deal',
+        min: 0,
+        example: '10',
+      },
+      a: {
+        type: 'number',
+        required: false,
+        description: 'Alias for amount',
+        min: 0,
+        example: '10',
+      },
+      type: {
+        type: 'enum',
+        required: false,
+        description: 'Damage type for resistance calculations',
+        values: ['physical', 'magic', 'fire', 'ice', 'lightning', 'poison'],
+        example: 'magic',
+      },
+      ignorearmor: {
+        type: 'boolean',
+        required: false,
+        default: false,
+        description: 'Whether to ignore armor when dealing damage',
+        example: 'true',
+      },
+      preventknockback: {
+        type: 'boolean',
+        required: false,
+        default: false,
+        description: 'Prevent knockback from the damage',
+        example: 'false',
+      },
+      preventimmunity: {
+        type: 'boolean',
+        required: false,
+        default: false,
+        description: 'Bypass damage immunity frames',
+        example: 'true',
+      },
+    },
+    examples: [
+      'damage{amount=10}',
+      'damage{a=20;type=magic;ignorearmor=true}',
+      'damage{amount=5;preventknockback=true}',
+    ],
+  },
+
+  skill: {
+    name: 'skill',
+    aliases: ['s'],
+    category: 'Meta/Flow Control',
+    description: 'Executes another metaskill',
+    targetType: 'meta',
+    parameters: {
+      skill: {
+        type: 'string',
+        required: true,
+        description: 'Name of the metaskill to execute',
+        example: 'FireBurst',
+      },
+      s: {
+        type: 'string',
+        required: false,
+        description: 'Alias for skill',
+        example: 'FireBurst',
+      },
+    },
+    examples: [
+      'skill{s=FireBurst}',
+      'skill{skill=BossIntro}',
+      'skill{s=PhaseTwo}',
+    ],
+  },
+
+  heal: {
+    name: 'heal',
+    category: 'Entity Targeting',
+    description: 'Heals target entities',
+    targetType: 'entity',
+    requiresTarget: true,
+    parameters: {
+      amount: {
+        type: 'number',
+        required: true,
+        default: 1,
+        description: 'Amount of health to restore',
+        min: 0,
+        example: '10',
+      },
+      a: {
+        type: 'number',
+        required: false,
+        description: 'Alias for amount',
+        min: 0,
+        example: '10',
+      },
+      overheal: {
+        type: 'boolean',
+        required: false,
+        default: false,
+        description: 'Allow healing above max health',
+        example: 'false',
+      },
+    },
+    examples: [
+      'heal{amount=10}',
+      'heal{a=5}',
+      'heal{amount=20;overheal=true}',
+    ],
+  },
+
+  'effect:particles': {
+    name: 'effect:particles',
+    aliases: ['e:particles', 'particles'],
+    category: 'Sound/Visual',
+    description: 'Spawns particle effects at target location',
+    targetType: 'location',
+    parameters: {
+      particle: {
+        type: 'string',
+        required: true,
+        description: 'Particle type (e.g., flame, smoke, heart)',
+        example: 'flame',
+      },
+      p: {
+        type: 'string',
+        required: false,
+        description: 'Alias for particle',
+        example: 'flame',
+      },
+      amount: {
+        type: 'number',
+        required: false,
+        default: 1,
+        description: 'Number of particles to spawn',
+        min: 0,
+        example: '20',
+      },
+      a: {
+        type: 'number',
+        required: false,
+        description: 'Alias for amount',
+        min: 0,
+        example: '20',
+      },
+      speed: {
+        type: 'number',
+        required: false,
+        default: 0,
+        description: 'Speed of particle movement',
+        min: 0,
+        example: '0.1',
+      },
+      hspread: {
+        type: 'number',
+        required: false,
+        default: 0,
+        description: 'Horizontal spread',
+        min: 0,
+        example: '0.5',
+      },
+      vspread: {
+        type: 'number',
+        required: false,
+        default: 0,
+        description: 'Vertical spread',
+        min: 0,
+        example: '0.5',
+      },
+    },
+    examples: [
+      'effect:particles{p=flame;a=20}',
+      'effect:particles{particle=heart;amount=5;speed=0.1}',
+      'effect:particles{p=smoke;a=50;hspread=1;vspread=1}',
+    ],
+  },
+
+  message: {
+    name: 'message',
+    aliases: ['msg', 'm'],
+    category: 'Sound/Visual',
+    description: 'Sends a chat message to target players',
+    targetType: 'entity',
+    requiresTarget: true,
+    parameters: {
+      message: {
+        type: 'string',
+        required: true,
+        description: 'Message to send (supports placeholders and color codes)',
+        example: '&cHello <target.name>!',
+      },
+      m: {
+        type: 'string',
+        required: false,
+        description: 'Alias for message',
+        example: '&aWelcome!',
+      },
+    },
+    examples: [
+      'message{m="&cYou have been marked!"}',
+      'message{message="Hello <target.name>"}',
+      'message{m="&6Boss &4<caster.name> &6has awakened!"}',
+    ],
+  },
+
+  potion: {
+    name: 'potion',
+    category: 'Entity Targeting',
+    description: 'Applies a potion effect to target entities',
+    targetType: 'entity',
+    requiresTarget: true,
+    parameters: {
+      type: {
+        type: 'enum',
+        required: true,
+        description: 'Potion effect type',
+        values: ['POISON', 'SLOWNESS', 'SPEED', 'WEAKNESS', 'STRENGTH', 'REGENERATION', 'BLINDNESS', 'WITHER', 'GLOWING'],
+        example: 'POISON',
+      },
+      duration: {
+        type: 'number',
+        required: false,
+        default: 100,
+        description: 'Duration in ticks (20 ticks = 1 second)',
+        min: 0,
+        example: '100',
+      },
+      d: {
+        type: 'number',
+        required: false,
+        description: 'Alias for duration',
+        min: 0,
+        example: '100',
+      },
+      level: {
+        type: 'number',
+        required: false,
+        default: 1,
+        description: 'Effect amplifier (level - 1)',
+        min: 1,
+        example: '2',
+      },
+      l: {
+        type: 'number',
+        required: false,
+        description: 'Alias for level',
+        min: 1,
+        example: '2',
+      },
+    },
+    examples: [
+      'potion{type=POISON;duration=100;level=2}',
+      'potion{type=SPEED;d=200;l=1}',
+      'potion{type=WITHER;duration=60;level=3}',
+    ],
+  },
+
+  teleport: {
+    name: 'teleport',
+    aliases: ['tp'],
+    category: 'Entity Targeting',
+    description: 'Teleports target entities to a location',
+    targetType: 'entity',
+    requiresTarget: true,
+    parameters: {
+      world: {
+        type: 'string',
+        required: false,
+        description: 'World name (uses current world if not specified)',
+        example: 'world_nether',
+      },
+      spreadh: {
+        type: 'number',
+        required: false,
+        default: 0,
+        description: 'Horizontal spread radius',
+        min: 0,
+        example: '5',
+      },
+      spreadv: {
+        type: 'number',
+        required: false,
+        default: 0,
+        description: 'Vertical spread radius',
+        min: 0,
+        example: '2',
+      },
+    },
+    examples: [
+      'teleport @self',
+      'teleport{spreadh=5} @targetlocation',
+      'teleport{world=world_nether}',
+    ],
+  },
+
+  sound: {
+    name: 'sound',
+    category: 'Sound/Visual',
+    description: 'Plays a sound at target location',
+    targetType: 'location',
+    parameters: {
+      sound: {
+        type: 'string',
+        required: true,
+        description: 'Sound name (e.g., ENTITY_BLAZE_SHOOT)',
+        example: 'ENTITY_BLAZE_SHOOT',
+      },
+      s: {
+        type: 'string',
+        required: false,
+        description: 'Alias for sound',
+        example: 'ENTITY_ENDERMAN_TELEPORT',
+      },
+      volume: {
+        type: 'number',
+        required: false,
+        default: 1,
+        description: 'Sound volume',
+        min: 0,
+        example: '1.5',
+      },
+      v: {
+        type: 'number',
+        required: false,
+        description: 'Alias for volume',
+        min: 0,
+        example: '1.5',
+      },
+      pitch: {
+        type: 'number',
+        required: false,
+        default: 1,
+        description: 'Sound pitch',
+        min: 0,
+        max: 2,
+        example: '0.8',
+      },
+      p: {
+        type: 'number',
+        required: false,
+        description: 'Alias for pitch',
+        min: 0,
+        max: 2,
+        example: '1.2',
+      },
+    },
+    examples: [
+      'sound{s=ENTITY_BLAZE_SHOOT}',
+      'sound{sound=ENTITY_ENDERMAN_TELEPORT;volume=2;pitch=0.5}',
+      'sound{s=ENTITY_WITHER_SPAWN;v=1.5;p=0.8}',
+    ],
+  },
+
+  ignite: {
+    name: 'ignite',
+    category: 'Entity Targeting',
+    description: 'Sets target entities on fire',
+    targetType: 'entity',
+    requiresTarget: true,
+    parameters: {
+      ticks: {
+        type: 'number',
+        required: false,
+        default: 100,
+        description: 'Duration of fire in ticks',
+        min: 0,
+        example: '100',
+      },
+      t: {
+        type: 'number',
+        required: false,
+        description: 'Alias for ticks',
+        min: 0,
+        example: '100',
+      },
+    },
+    examples: [
+      'ignite{ticks=100}',
+      'ignite{t=200}',
+      'ignite',
+    ],
+  },
+
+  lightning: {
+    name: 'lightning',
+    category: 'Location Targeting',
+    description: 'Strikes lightning at target location',
+    targetType: 'location',
+    parameters: {
+      damage: {
+        type: 'boolean',
+        required: false,
+        default: true,
+        description: 'Whether lightning deals damage',
+        example: 'false',
+      },
+    },
+    examples: [
+      'lightning',
+      'lightning{damage=false}',
+      'lightning{damage=true}',
+    ],
+  },
+
+  throw: {
+    name: 'throw',
+    category: 'Entity Targeting',
+    description: 'Throws/launches target entities',
+    targetType: 'entity',
+    requiresTarget: true,
+    parameters: {
+      velocity: {
+        type: 'number',
+        required: false,
+        default: 1,
+        description: 'Throw velocity multiplier',
+        min: 0,
+        example: '2',
+      },
+      v: {
+        type: 'number',
+        required: false,
+        description: 'Alias for velocity',
+        min: 0,
+        example: '2',
+      },
+    },
+    examples: [
+      'throw{velocity=2}',
+      'throw{v=1.5}',
+      'throw',
+    ],
+  },
+
+  sethealth: {
+    name: 'sethealth',
+    aliases: ['sethp'],
+    category: 'Entity Targeting',
+    description: 'Sets target entity health to a specific value',
+    targetType: 'entity',
+    requiresTarget: true,
+    parameters: {
+      amount: {
+        type: 'number',
+        required: true,
+        description: 'Health value to set',
+        min: 0,
+        example: '20',
+      },
+      a: {
+        type: 'number',
+        required: false,
+        description: 'Alias for amount',
+        min: 0,
+        example: '20',
+      },
+    },
+    examples: [
+      'sethealth{amount=50}',
+      'sethp{a=100}',
+      'sethealth{amount=1}',
+    ],
+  },
+
+  pull: {
+    name: 'pull',
+    category: 'Entity Targeting',
+    description: 'Pulls target entities toward caster',
+    targetType: 'entity',
+    requiresTarget: true,
+    parameters: {
+      velocity: {
+        type: 'number',
+        required: false,
+        default: 1,
+        description: 'Pull velocity',
+        min: 0,
+        example: '2',
+      },
+      v: {
+        type: 'number',
+        required: false,
+        description: 'Alias for velocity',
+        min: 0,
+        example: '2',
+      },
+    },
+    examples: [
+      'pull{velocity=2}',
+      'pull{v=1.5}',
+      'pull',
+    ],
+  },
+
+  push: {
+    name: 'push',
+    category: 'Entity Targeting',
+    description: 'Pushes target entities away from caster',
+    targetType: 'entity',
+    requiresTarget: true,
+    parameters: {
+      velocity: {
+        type: 'number',
+        required: false,
+        default: 1,
+        description: 'Push velocity',
+        min: 0,
+        example: '2',
+      },
+      v: {
+        type: 'number',
+        required: false,
+        description: 'Alias for velocity',
+        min: 0,
+        example: '2',
+      },
+    },
+    examples: [
+      'push{velocity=2}',
+      'push{v=1.5}',
+      'push',
+    ],
+  },
+
+  delay: {
+    name: 'delay',
+    category: 'Meta/Flow Control',
+    description: 'Delays execution of subsequent mechanics',
+    targetType: 'meta',
+    parameters: {
+      ticks: {
+        type: 'number',
+        required: true,
+        description: 'Delay in ticks (20 ticks = 1 second)',
+        min: 0,
+        example: '20',
+      },
+      t: {
+        type: 'number',
+        required: false,
+        description: 'Alias for ticks',
+        min: 0,
+        example: '20',
+      },
+    },
+    examples: [
+      'delay{ticks=20}',
+      'delay{t=100}',
+      'delay{ticks=40}',
+    ],
+  },
+
+  explosion: {
+    name: 'explosion',
+    category: 'Location Targeting',
+    description: 'Creates an explosion at target location',
+    targetType: 'location',
+    parameters: {
+      yield: {
+        type: 'number',
+        required: false,
+        default: 4,
+        description: 'Explosion power',
+        min: 0,
+        example: '6',
+      },
+      y: {
+        type: 'number',
+        required: false,
+        description: 'Alias for yield',
+        min: 0,
+        example: '6',
+      },
+      blockdamage: {
+        type: 'boolean',
+        required: false,
+        default: true,
+        description: 'Whether explosion damages blocks',
+        example: 'false',
+      },
+      fire: {
+        type: 'boolean',
+        required: false,
+        default: false,
+        description: 'Whether explosion creates fire',
+        example: 'true',
+      },
+    },
+    examples: [
+      'explosion{yield=6}',
+      'explosion{y=4;blockdamage=false}',
+      'explosion{yield=10;fire=true}',
+    ],
+  },
+
+  speak: {
+    name: 'speak',
+    category: 'Sound/Visual',
+    description: 'Makes the mob speak (appears above its head)',
+    targetType: 'entity',
+    parameters: {
+      message: {
+        type: 'string',
+        required: true,
+        description: 'Message to speak (supports placeholders and color codes)',
+        example: '&eI have awakened!',
+      },
+      m: {
+        type: 'string',
+        required: false,
+        description: 'Alias for message',
+        example: '&cFear me!',
+      },
+      offset: {
+        type: 'number',
+        required: false,
+        default: 0,
+        description: 'Vertical offset from mob',
+        example: '2',
+      },
+      radius: {
+        type: 'number',
+        required: false,
+        default: 12,
+        description: 'Visibility radius',
+        min: 0,
+        example: '20',
+      },
+      duration: {
+        type: 'number',
+        required: false,
+        default: 80,
+        description: 'Duration in ticks',
+        min: 0,
+        example: '100',
+      },
+    },
+    examples: [
+      'speak{m="&eI have awakened!"}',
+      'speak{message="&cYou dare challenge me?";radius=20}',
+      'speak{m="&6Time to die!";duration=100;offset=2}',
+    ],
+  },
+
+  summon: {
+    name: 'summon',
+    category: 'Entity Targeting',
+    description: 'Summons a MythicMob at target location',
+    targetType: 'location',
+    parameters: {
+      type: {
+        type: 'string',
+        required: true,
+        description: 'MythicMob internal name to summon',
+        example: 'SkeletonKing',
+      },
+      t: {
+        type: 'string',
+        required: false,
+        description: 'Alias for type',
+        example: 'FireElemental',
+      },
+      amount: {
+        type: 'number',
+        required: false,
+        default: 1,
+        description: 'Number of mobs to summon',
+        min: 1,
+        example: '3',
+      },
+      a: {
+        type: 'number',
+        required: false,
+        description: 'Alias for amount',
+        min: 1,
+        example: '3',
+      },
+      radius: {
+        type: 'number',
+        required: false,
+        default: 0,
+        description: 'Spawn radius',
+        min: 0,
+        example: '5',
+      },
+    },
+    examples: [
+      'summon{type=SkeletonKing}',
+      'summon{t=FireElemental;amount=3;radius=5}',
+      'summon{type=BossMinion;a=5}',
+    ],
+  },
+
+  threat: {
+    name: 'threat',
+    category: 'Entity Targeting',
+    description: 'Modifies threat table value for target',
+    targetType: 'entity',
+    requiresTarget: true,
+    parameters: {
+      amount: {
+        type: 'number',
+        required: true,
+        description: 'Threat amount to add (can be negative)',
+        example: '100',
+      },
+      a: {
+        type: 'number',
+        required: false,
+        description: 'Alias for amount',
+        example: '100',
+      },
+    },
+    examples: [
+      'threat{amount=100}',
+      'threat{a=-50}',
+      'threat{amount=200}',
+    ],
+  },
+
+  mount: {
+    name: 'mount',
+    category: 'Entity Targeting',
+    description: 'Mounts the caster onto target entity',
+    targetType: 'entity',
+    requiresTarget: true,
+    parameters: {},
+    examples: [
+      'mount @target',
+      'mount @nearestplayer{r=10}',
+    ],
+  },
+};

@@ -1,4 +1,5 @@
 import { useProjectStore } from '../../stores/projectStore';
+import { Upload, Download } from 'lucide-react';
 
 export function Header() {
   const { projectName, exportYAML } = useProjectStore();
@@ -50,14 +51,16 @@ export function Header() {
       <div className="flex items-center gap-2">
         <button
           onClick={handleImport}
-          className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded transition-colors"
+          className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded transition-colors flex items-center gap-2"
         >
+          <Upload size={16} strokeWidth={2} />
           Import YAML
         </button>
         <button
           onClick={handleExport}
-          className="px-4 py-2 bg-primary hover:bg-blue-700 rounded transition-colors"
+          className="px-4 py-2 bg-primary hover:bg-blue-700 rounded transition-colors flex items-center gap-2"
         >
+          <Download size={16} strokeWidth={2} />
           Export YAML
         </button>
       </div>

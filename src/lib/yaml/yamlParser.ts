@@ -1,5 +1,6 @@
 import yaml from 'js-yaml';
 import { MobConfig, MinecraftEntity, SkillLine } from '../../types/mob';
+import { parseSkillLine } from '../parser';
 
 /**
  * Parses a YAML object into a MobConfig
@@ -50,15 +51,24 @@ export function yamlToMobConfig(internalName: string, yamlObj: any): MobConfig {
     mob.options = yamlObj.Options;
   }
 
-  // Parse Skills (basic parsing for now)
+  // Parse Skills using the skill line parser
   if (yamlObj.Skills && Array.isArray(yamlObj.Skills)) {
     mob.skills = yamlObj.Skills.map((skillStr: string): SkillLine => {
-      // For now, just store the raw string
-      // Full parsing will be implemented in Phase 2
-      return {
-        raw: skillStr,
-        mechanic: skillStr.split(/[{@~\s]/)[0] || 'unknown',
-      };
+      try {
+        // Parse the skill line into structured format
+        const ast = parseSkillLine(skillStr);
+        return {
+          raw: skillStr,
+          ...ast,
+        };
+      } catch (error) {
+        // Fallback to basic parsing if skill line parser fails
+        console.warn(`Failed to parse skill line: "${skillStr}"`, error);
+        return {
+          raw: skillStr,
+          mechanic: skillStr.split(/[{@~\s]/)[0] || 'unknown',
+        };
+      }
     });
   }
 

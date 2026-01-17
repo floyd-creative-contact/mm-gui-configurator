@@ -1,4 +1,8 @@
 // Core MythicMobs configuration types
+import { TargeterConfig, HealthModifier } from '../lib/parser/types';
+
+// Re-export parser types for convenience
+export type { TargeterConfig, HealthModifier };
 
 export type MinecraftEntity =
   | 'ZOMBIE' | 'SKELETON' | 'CREEPER' | 'SPIDER' | 'ENDERMAN'
@@ -39,16 +43,6 @@ export interface SkillLine {
   trigger?: string;
   healthModifier?: HealthModifier;
   chance?: number;
-}
-
-export interface TargeterConfig {
-  type: string;
-  options?: Record<string, any>;
-}
-
-export interface HealthModifier {
-  operator: '<' | '=' | '>';
-  value: string; // e.g., "50%", "100", "30%-50%"
 }
 
 export interface MobConfig {

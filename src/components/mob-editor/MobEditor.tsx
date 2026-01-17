@@ -1,5 +1,6 @@
 import { useProjectStore } from '../../stores/projectStore';
 import { MobConfig, MinecraftEntity } from '../../types/mob';
+import { Info, Settings } from 'lucide-react';
 
 interface MobEditorProps {
   mob: MobConfig;
@@ -30,7 +31,10 @@ export function MobEditor({ mob }: MobEditorProps) {
       <div className="space-y-6">
         {/* Basic Information Section */}
         <section className="bg-surface border border-gray-700 rounded-lg p-6">
-          <h3 className="text-lg font-semibold mb-4">Basic Information</h3>
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+            <Info size={20} strokeWidth={2} className="text-primary" />
+            Basic Information
+          </h3>
 
           <div className="space-y-4">
             {/* Entity Type */}
@@ -129,7 +133,10 @@ export function MobEditor({ mob }: MobEditorProps) {
 
         {/* Advanced Settings Placeholder */}
         <section className="bg-surface border border-gray-700 rounded-lg p-6">
-          <h3 className="text-lg font-semibold mb-2">Advanced Settings</h3>
+          <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
+            <Settings size={20} strokeWidth={2} className="text-primary" />
+            Advanced Settings
+          </h3>
           <p className="text-sm text-gray-500">
             Additional features like Skills, AI, Equipment, and more will be added in future updates.
           </p>

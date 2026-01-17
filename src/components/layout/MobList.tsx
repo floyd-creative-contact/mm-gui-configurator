@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useProjectStore } from '../../stores/projectStore';
 import { MobConfig } from '../../types/mob';
+import { Plus, Trash2 } from 'lucide-react';
 
 export function MobList() {
   const { mobs, activeMobId, addMob, setActiveMob, deleteMob } = useProjectStore();
@@ -47,9 +48,10 @@ export function MobList() {
         {!isCreating ? (
           <button
             onClick={() => setIsCreating(true)}
-            className="w-full px-3 py-2 bg-primary hover:bg-blue-700 rounded transition-colors text-sm"
+            className="w-full px-3 py-2 bg-primary hover:bg-blue-700 rounded transition-colors text-sm flex items-center justify-center gap-2"
           >
-            + New Mob
+            <Plus size={16} strokeWidth={2} />
+            New Mob
           </button>
         ) : (
           <div className="space-y-2">
@@ -120,7 +122,7 @@ export function MobList() {
                     className="ml-2 p-1 text-gray-400 hover:text-error opacity-0 group-hover:opacity-100 transition-opacity"
                     title="Delete mob"
                   >
-                    ×
+                    <Trash2 size={16} strokeWidth={2} />
                   </button>
                 </div>
               </li>

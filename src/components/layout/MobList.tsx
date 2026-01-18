@@ -1,39 +1,25 @@
 import { useState } from 'react';
 import { useProjectStore } from '../../stores/projectStore';
 import { MobConfig, MetaskillConfig } from '../../types/mob';
-import { Plus, Trash2, FileText } from 'lucide-react';
+import { Trash2, FileText, Wand2 } from 'lucide-react';
 import { TemplateModal } from '../templates/TemplateModal';
+import { MobCreationWizard } from '../wizard/MobCreationWizard';
 
 export function MobList() {
   const { mobs, activeMobId, addMob, setActiveMob, deleteMob } = useProjectStore();
-  const [isCreating, setIsCreating] = useState(false);
   const [showTemplates, setShowTemplates] = useState(false);
-  const [newMobName, setNewMobName] = useState('');
+  const [showWizard, setShowWizard] = useState(false);
 
   const mobList = Array.from(mobs.values());
 
-  const handleCreateMob = () => {
-    if (!newMobName.trim()) return;
-
-    const internalName = newMobName.trim().replace(/\s+/g, '_');
-
+  const handleWizardComplete = (mob: MobConfig) => {
     // Check if mob already exists
-    if (mobs.has(internalName)) {
+    if (mobs.has(mob.internalName)) {
       alert('A mob with this name already exists!');
       return;
     }
 
-    const newMob: MobConfig = {
-      internalName,
-      type: 'ZOMBIE',
-      display: newMobName.trim(),
-      health: 20,
-      damage: 5,
-    };
-
-    addMob(newMob);
-    setNewMobName('');
-    setIsCreating(false);
+    addMob(mob);
   };
 
   const handleDelete = (id: string, e: React.MouseEvent) => {
@@ -73,61 +59,30 @@ export function MobList() {
         onSelectTemplate={handleTemplateSelect}
       />
 
+      <MobCreationWizard
+        isOpen={showWizard}
+        onClose={() => setShowWizard(false)}
+        onComplete={handleWizardComplete}
+      />
+
       <div className="p-4 border-b border-gray-700">
         <h2 className="text-lg font-semibold mb-3">Mobs</h2>
-        {!isCreating ? (
-          <div className="space-y-2">
-            <button
-              onClick={() => setIsCreating(true)}
-              className="w-full px-3 py-2 bg-primary hover:bg-blue-700 rounded transition-colors text-sm flex items-center justify-center gap-2"
-            >
-              <Plus size={16} strokeWidth={2} />
-              New Mob
-            </button>
-            <button
-              onClick={() => setShowTemplates(true)}
-              className="w-full px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded transition-colors text-sm flex items-center justify-center gap-2"
-            >
-              <FileText size={16} strokeWidth={2} />
-              From Template
-            </button>
-          </div>
-        ) : (
-          <div className="space-y-2">
-            <input
-              type="text"
-              value={newMobName}
-              onChange={(e) => setNewMobName(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') handleCreateMob();
-                if (e.key === 'Escape') {
-                  setIsCreating(false);
-                  setNewMobName('');
-                }
-              }}
-              placeholder="Mob name..."
-              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded focus:outline-none focus:border-primary text-sm"
-              autoFocus
-            />
-            <div className="flex gap-2">
-              <button
-                onClick={handleCreateMob}
-                className="flex-1 px-3 py-1 bg-success hover:bg-green-700 rounded transition-colors text-sm"
-              >
-                Create
-              </button>
-              <button
-                onClick={() => {
-                  setIsCreating(false);
-                  setNewMobName('');
-                }}
-                className="flex-1 px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded transition-colors text-sm"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        )}
+        <div className="space-y-2">
+          <button
+            onClick={() => setShowWizard(true)}
+            className="w-full px-3 py-2 bg-primary hover:bg-blue-700 rounded transition-colors text-sm flex items-center justify-center gap-2"
+          >
+            <Wand2 size={16} strokeWidth={2} />
+            Guided Creation
+          </button>
+          <button
+            onClick={() => setShowTemplates(true)}
+            className="w-full px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded transition-colors text-sm flex items-center justify-center gap-2"
+          >
+            <FileText size={16} strokeWidth={2} />
+            From Template
+          </button>
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto">

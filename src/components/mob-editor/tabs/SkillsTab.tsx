@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Plus, Trash2, Eye, ExternalLink, AlertTriangle } from 'lucide-react';
+import { Plus, Trash2, Eye, ExternalLink, AlertTriangle, Sparkles } from 'lucide-react';
 import { useProjectStore } from '../../../stores/projectStore';
 import { MobConfig, SkillLine } from '../../../types/mob';
 import { SkillLineEditor } from '../../common/SkillLineEditor';
+import { SkillCreationWizard } from '../../wizard/SkillCreationWizard';
 
 interface SkillsTabProps {
   mob: MobConfig;
@@ -14,6 +15,7 @@ export function SkillsTab({ mob, onNavigateToMetaskill }: SkillsTabProps) {
   const metaskills = useProjectStore((state) => state.metaskills);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editingSkill, setEditingSkill] = useState<string>('');
+  const [showWizard, setShowWizard] = useState(false);
 
   const skills = mob.skills || [];
 
@@ -31,6 +33,11 @@ export function SkillsTab({ mob, onNavigateToMetaskill }: SkillsTabProps) {
 
   const handleAddSkill = () => {
     const newSkills = [...skills, { mechanic: 'damage', parameters: { amount: 5 }, raw: '- damage{amount=5}' }];
+    updateMob(mob.internalName, { skills: newSkills });
+  };
+
+  const handleWizardComplete = (skill: SkillLine) => {
+    const newSkills = [...skills, skill];
     updateMob(mob.internalName, { skills: newSkills });
   };
 
@@ -98,13 +105,24 @@ export function SkillsTab({ mob, onNavigateToMetaskill }: SkillsTabProps) {
         {/* Header */}
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold">Mob Skills</h3>
-          <button
-            onClick={handleAddSkill}
-            className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded hover:bg-primary-dark transition-colors"
-          >
-            <Plus size={16} />
-            Add Skill
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowWizard(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors"
+              title="Create skill with guided wizard"
+            >
+              <Sparkles size={16} />
+              Wizard
+            </button>
+            <button
+              onClick={handleAddSkill}
+              className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded hover:bg-primary-dark transition-colors"
+              title="Add empty skill manually"
+            >
+              <Plus size={16} />
+              Add Skill
+            </button>
+          </div>
         </div>
 
         {/* Skills List */}
@@ -261,6 +279,13 @@ export function SkillsTab({ mob, onNavigateToMetaskill }: SkillsTabProps) {
           </p>
         </div>
       </div>
+
+      {/* Skill Creation Wizard */}
+      <SkillCreationWizard
+        isOpen={showWizard}
+        onClose={() => setShowWizard(false)}
+        onComplete={handleWizardComplete}
+      />
     </div>
   );
 }

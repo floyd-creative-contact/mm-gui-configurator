@@ -1,13 +1,15 @@
 import { useState } from 'react';
 import { useProjectStore } from '../../stores/projectStore';
 import { MetaskillConfig, MobConfig } from '../../types/mob';
-import { Plus, Trash2, AlertCircle, Sparkles } from 'lucide-react';
+import { Plus, Trash2, AlertCircle, Sparkles, Wand2 } from 'lucide-react';
 import { TemplateModal } from '../templates/TemplateModal';
+import { MetaskillCreationWizard } from '../wizard/MetaskillCreationWizard';
 
 export function MetaskillList() {
   const { metaskills, activeMetaskillId, addMetaskill, setActiveMetaskill, deleteMetaskill, getMetaskillUsageCount } = useProjectStore();
   const [isCreating, setIsCreating] = useState(false);
   const [showTemplates, setShowTemplates] = useState(false);
+  const [showWizard, setShowWizard] = useState(false);
   const [newMetaskillName, setNewMetaskillName] = useState('');
 
   const metaskillList = Array.from(metaskills.values());
@@ -70,6 +72,16 @@ export function MetaskillList() {
     addMetaskill(newMetaskill);
   };
 
+  const handleWizardComplete = (metaskill: MetaskillConfig) => {
+    // Check if metaskill already exists
+    if (metaskills.has(metaskill.internalName)) {
+      alert('A metaskill with this name already exists!');
+      return;
+    }
+
+    addMetaskill(metaskill);
+  };
+
   return (
     <div className="flex flex-col h-full">
       <TemplateModal
@@ -84,11 +96,18 @@ export function MetaskillList() {
         {!isCreating ? (
           <div className="space-y-2">
             <button
+              onClick={() => setShowWizard(true)}
+              className="w-full px-3 py-2 bg-indigo-600 hover:bg-indigo-700 rounded transition-colors text-sm flex items-center justify-center gap-2"
+            >
+              <Wand2 size={16} strokeWidth={2} />
+              Wizard
+            </button>
+            <button
               onClick={() => setIsCreating(true)}
               className="w-full px-3 py-2 bg-primary hover:bg-blue-700 rounded transition-colors text-sm flex items-center justify-center gap-2"
             >
               <Plus size={16} strokeWidth={2} />
-              New Metaskill
+              Quick Add
             </button>
             <button
               onClick={() => setShowTemplates(true)}
@@ -189,6 +208,13 @@ export function MetaskillList() {
           </ul>
         )}
       </div>
+
+      {/* Metaskill Creation Wizard */}
+      <MetaskillCreationWizard
+        isOpen={showWizard}
+        onClose={() => setShowWizard(false)}
+        onComplete={handleWizardComplete}
+      />
     </div>
   );
 }

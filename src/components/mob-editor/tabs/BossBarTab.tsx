@@ -1,5 +1,6 @@
 import { useProjectStore } from '../../../stores/projectStore';
 import { MobConfig, BossBarConfig } from '../../../types/mob';
+import { MinecraftText } from '../../common/MinecraftText';
 
 interface BossBarTabProps {
   mob: MobConfig;
@@ -137,15 +138,15 @@ export function BossBarTab({ mob }: BossBarTabProps) {
 
             {/* Preview */}
             <div className="p-4 bg-gray-800 border border-gray-700 rounded">
-              <h4 className="text-sm font-semibold mb-3">Preview</h4>
+              <h4 className="text-sm font-semibold mb-3">Preview (In-Game Appearance)</h4>
               <div className="bg-gray-900 rounded p-4">
                 <div className="max-w-md mx-auto">
-                  <div className="text-center text-sm mb-2">
-                    {bossBar.title || mob.display || mob.internalName}
+                  <div className="text-center text-sm mb-2 flex justify-center">
+                    <MinecraftText text={bossBar.title || mob.display || mob.internalName} />
                   </div>
-                  <div className="relative h-3 bg-gray-800 rounded overflow-hidden">
+                  <div className="relative h-3 bg-gray-800 rounded overflow-hidden shadow-lg">
                     <div
-                      className={`absolute inset-0 ${getColorClass(bossBar.color || 'PURPLE')} opacity-75`}
+                      className={`absolute inset-0 ${getColorClass(bossBar.color || 'PURPLE')} transition-all`}
                       style={{ width: '60%' }}
                     >
                       {bossBar.style !== 'SOLID' && (
@@ -153,13 +154,16 @@ export function BossBarTab({ mob }: BossBarTabProps) {
                           {Array.from({ length: getSegmentCount(bossBar.style) }).map((_, i) => (
                             <div
                               key={i}
-                              className="flex-1 border-r border-gray-900"
+                              className="flex-1 border-r-2 border-gray-900"
                               style={{ borderRightWidth: i === getSegmentCount(bossBar.style) - 1 ? 0 : 2 }}
                             />
                           ))}
                         </div>
                       )}
                     </div>
+                  </div>
+                  <div className="text-xs text-center mt-2 text-gray-500">
+                    60% health shown (for demonstration)
                   </div>
                 </div>
               </div>

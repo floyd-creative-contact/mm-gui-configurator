@@ -1,5 +1,6 @@
 import { useProjectStore } from '../../../stores/projectStore';
 import { MobConfig, MinecraftEntity } from '../../../types/mob';
+import { MinecraftTextPreview } from '../../common/MinecraftText';
 
 interface BasicInfoTabProps {
   mob: MobConfig;
@@ -60,6 +61,13 @@ export function BasicInfoTab({ mob }: BasicInfoTabProps) {
           <p className="text-xs text-gray-500 mt-1">
             Supports Minecraft color codes (&a, &c, etc.)
           </p>
+
+          {/* Live Preview */}
+          {mob.display && (
+            <div className="mt-3">
+              <MinecraftTextPreview text={mob.display} />
+            </div>
+          )}
         </div>
 
         {/* Health */}

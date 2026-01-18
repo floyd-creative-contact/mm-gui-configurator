@@ -286,11 +286,17 @@ export function SkillLineEditor({
 
       case 'parameter': {
         const lastLine = beforeCursor.split('\n').pop() || '';
-        const paramMatch = lastLine.match(/([^;]*)$/);
-        if (paramMatch) {
-          const replaceStart = beforeCursor.length - paramMatch[1].length;
-          newValue = value.substring(0, replaceStart) + suggestion.text + '=' + afterCursor;
-          newCursorPos = replaceStart + suggestion.text.length + 1;
+        // Find the position within the parameter block
+        const paramBlockMatch = lastLine.match(/-\s+(\w+)\{([^}]*)$/);
+        if (paramBlockMatch) {
+          const paramText = paramBlockMatch[2];
+          const lastParam = paramText.split(';').pop() || '';
+          const paramNameMatch = lastParam.match(/^([a-zA-Z0-9_]*)$/);
+          if (paramNameMatch) {
+            const replaceStart = beforeCursor.length - paramNameMatch[1].length;
+            newValue = value.substring(0, replaceStart) + suggestion.text + '=' + afterCursor;
+            newCursorPos = replaceStart + suggestion.text.length + 1;
+          }
         }
         break;
       }

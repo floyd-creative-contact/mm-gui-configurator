@@ -1,41 +1,27 @@
 import { useState } from 'react';
-import { Plus, Trash2, Eye, ExternalLink, AlertTriangle } from 'lucide-react';
+import { Plus, Trash2, Eye } from 'lucide-react';
 import { useProjectStore } from '../../../stores/projectStore';
-import { MobConfig, SkillLine } from '../../../types/mob';
+import { MetaskillConfig, SkillLine } from '../../../types/mob';
 
-interface SkillsTabProps {
-  mob: MobConfig;
-  onNavigateToMetaskill?: (metaskillId: string) => void;
+interface MetaskillSkillsTabProps {
+  metaskill: MetaskillConfig;
 }
 
-export function SkillsTab({ mob, onNavigateToMetaskill }: SkillsTabProps) {
-  const updateMob = useProjectStore((state) => state.updateMob);
-  const metaskills = useProjectStore((state) => state.metaskills);
+export function MetaskillSkillsTab({ metaskill }: MetaskillSkillsTabProps) {
+  const updateMetaskill = useProjectStore((state) => state.updateMetaskill);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editingSkill, setEditingSkill] = useState<string>('');
 
-  const skills = mob.skills || [];
-
-  // Check if a skill references a metaskill
-  const getMetaskillReference = (skill: SkillLine): { name: string; exists: boolean } | null => {
-    if (skill.mechanic === 'skill' && skill.parameters?.s) {
-      const metaskillName = skill.parameters.s;
-      return {
-        name: metaskillName,
-        exists: metaskills.has(metaskillName)
-      };
-    }
-    return null;
-  };
+  const skills = metaskill.skills || [];
 
   const handleAddSkill = () => {
     const newSkills = [...skills, { mechanic: 'damage', parameters: { amount: 5 }, raw: '- damage{amount=5}' }];
-    updateMob(mob.internalName, { skills: newSkills });
+    updateMetaskill(metaskill.internalName, { skills: newSkills });
   };
 
   const handleDeleteSkill = (index: number) => {
     const newSkills = skills.filter((_, i) => i !== index);
-    updateMob(mob.internalName, { skills: newSkills });
+    updateMetaskill(metaskill.internalName, { skills: newSkills });
   };
 
   const handleEditSkill = (index: number) => {
@@ -46,7 +32,7 @@ export function SkillsTab({ mob, onNavigateToMetaskill }: SkillsTabProps) {
   const handleSaveSkill = (index: number) => {
     const newSkills = [...skills];
     newSkills[index] = { ...newSkills[index], raw: editingSkill };
-    updateMob(mob.internalName, { skills: newSkills });
+    updateMetaskill(metaskill.internalName, { skills: newSkills });
     setEditingIndex(null);
     setEditingSkill('');
   };
@@ -96,7 +82,7 @@ export function SkillsTab({ mob, onNavigateToMetaskill }: SkillsTabProps) {
       <div className="space-y-4">
         {/* Header */}
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold">Mob Skills</h3>
+          <h3 className="text-lg font-semibold">Metaskill Skills</h3>
           <button
             onClick={handleAddSkill}
             className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded hover:bg-primary-dark transition-colors"
@@ -109,7 +95,7 @@ export function SkillsTab({ mob, onNavigateToMetaskill }: SkillsTabProps) {
         {/* Skills List */}
         {skills.length === 0 ? (
           <div className="text-center py-12 text-gray-500">
-            <p>No skills configured for this mob.</p>
+            <p>No skills configured for this metaskill.</p>
             <p className="text-sm mt-2">Click "Add Skill" to get started.</p>
           </div>
         ) : (
@@ -134,7 +120,7 @@ export function SkillsTab({ mob, onNavigateToMetaskill }: SkillsTabProps) {
                         placeholder="- mechanic{param=value} @targeter ~trigger"
                       />
                       <p className="text-xs text-gray-500 mt-1">
-                        Edit the raw skill line. Format: - mechanic{'{'}params{'}'} @targeter ~trigger
+                        Edit the raw skill line. You can use <code>&lt;skill.varname&gt;</code> for parameters.
                       </p>
                     </div>
                     <div className="flex gap-2">
@@ -187,39 +173,6 @@ export function SkillsTab({ mob, onNavigateToMetaskill }: SkillsTabProps) {
                           </span>
                         )}
                       </div>
-
-                      {/* Metaskill Reference Indicator */}
-                      {(() => {
-                        const metaskillRef = getMetaskillReference(skill);
-                        if (!metaskillRef) return null;
-
-                        if (!metaskillRef.exists) {
-                          return (
-                            <div className="mt-2 flex items-center gap-2 text-xs text-yellow-500">
-                              <AlertTriangle size={14} />
-                              <span>Warning: Metaskill "{metaskillRef.name}" not found</span>
-                            </div>
-                          );
-                        }
-
-                        if (onNavigateToMetaskill) {
-                          return (
-                            <button
-                              onClick={() => onNavigateToMetaskill(metaskillRef.name)}
-                              className="mt-2 flex items-center gap-1 text-xs text-primary hover:text-blue-400 transition-colors"
-                            >
-                              <ExternalLink size={12} />
-                              <span>Go to metaskill "{metaskillRef.name}"</span>
-                            </button>
-                          );
-                        }
-
-                        return (
-                          <div className="mt-2 text-xs text-gray-400">
-                            References metaskill: {metaskillRef.name}
-                          </div>
-                        );
-                      })()}
                     </div>
 
                     {/* Actions */}
@@ -248,17 +201,24 @@ export function SkillsTab({ mob, onNavigateToMetaskill }: SkillsTabProps) {
 
         {/* Help Text */}
         <div className="mt-6 p-4 bg-gray-800 border border-gray-700 rounded">
-          <h4 className="text-sm font-semibold mb-2">Skill Line Format</h4>
-          <div className="text-xs text-gray-400 space-y-1">
-            <p><code className="text-purple-400">- mechanic{'{'}param=value{'}'}</code> - The skill mechanic with parameters</p>
-            <p><code className="text-cyan-400">@targeter{'{'}options{'}'}</code> - Optional targeter</p>
-            <p><code className="text-green-400">~trigger</code> - Optional trigger</p>
-            <p><code className="text-red-400">&lt;50%</code> - Optional health modifier</p>
-            <p><code className="text-yellow-400">0.5</code> - Optional chance (0.0-1.0)</p>
+          <h4 className="text-sm font-semibold mb-2">Using Parameters in Metaskills</h4>
+          <div className="text-xs text-gray-400 space-y-2">
+            <p>
+              You can use placeholders in your skill lines that get replaced when the metaskill is called:
+            </p>
+            <p className="font-mono text-gray-300 bg-gray-900 p-2 rounded">
+              - damage{'{'}amount=&lt;skill.damage&gt;{'}'}
+            </p>
+            <p className="mt-2">
+              When calling this metaskill:
+            </p>
+            <p className="font-mono text-gray-300 bg-gray-900 p-2 rounded">
+              - skill{'{'}s=MyMetaskill;damage=20{'}'}
+            </p>
+            <p className="mt-2">
+              The <code className="text-gray-300">&lt;skill.damage&gt;</code> will be replaced with <code className="text-gray-300">20</code>
+            </p>
           </div>
-          <p className="text-xs text-gray-500 mt-3">
-            Example: <code className="text-gray-300">- damage{'{'}amount=10{'}'} @PIR{'{'}r=5{'}'} ~onAttack &lt;50% 0.8</code>
-          </p>
         </div>
       </div>
     </div>

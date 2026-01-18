@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { MobConfig } from '../types/mob';
+import { MobConfig, MetaskillConfig } from '../types/mob';
 import { exportMobsToYAML } from '../lib/yaml/yamlGenerator';
 import { importYAMLToMobs } from '../lib/yaml/yamlParser';
 
@@ -12,14 +12,26 @@ interface ProjectState {
   mobs: Map<string, MobConfig>;
   activeMobId: string | null;
 
-  // Actions
+  // Metaskill data
+  metaskills: Map<string, MetaskillConfig>;
+  activeMetaskillId: string | null;
+
+  // Mob actions
   addMob: (mob: MobConfig) => void;
   updateMob: (id: string, updates: Partial<MobConfig>) => void;
   deleteMob: (id: string) => void;
   setActiveMob: (id: string | null) => void;
   getActiveMob: () => MobConfig | null;
 
-  // Import/Export (will implement later)
+  // Metaskill actions
+  addMetaskill: (metaskill: MetaskillConfig) => void;
+  updateMetaskill: (id: string, updates: Partial<MetaskillConfig>) => void;
+  deleteMetaskill: (id: string) => void;
+  setActiveMetaskill: (id: string | null) => void;
+  getActiveMetaskill: () => MetaskillConfig | null;
+  getMetaskillUsageCount: (id: string) => number;
+
+  // Import/Export
   importYAML: (yaml: string) => void;
   exportYAML: () => string;
 }
@@ -31,6 +43,10 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   mobs: new Map<string, MobConfig>(),
   activeMobId: null,
 
+  metaskills: new Map<string, MetaskillConfig>(),
+  activeMetaskillId: null,
+
+  // Mob actions
   addMob: (mob: MobConfig) => set((state) => {
     const newMobs = new Map(state.mobs);
     newMobs.set(mob.internalName, mob);
@@ -64,6 +80,67 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     const state = get();
     if (!state.activeMobId) return null;
     return state.mobs.get(state.activeMobId) || null;
+  },
+
+  // Metaskill actions
+  addMetaskill: (metaskill: MetaskillConfig) => set((state) => {
+    const newMetaskills = new Map(state.metaskills);
+    newMetaskills.set(metaskill.internalName, metaskill);
+    return {
+      metaskills: newMetaskills,
+      activeMetaskillId: metaskill.internalName // Auto-select newly added metaskill
+    };
+  }),
+
+  updateMetaskill: (id: string, updates: Partial<MetaskillConfig>) => set((state) => {
+    const newMetaskills = new Map(state.metaskills);
+    const existing = newMetaskills.get(id);
+    if (existing) {
+      newMetaskills.set(id, { ...existing, ...updates });
+    }
+    return { metaskills: newMetaskills };
+  }),
+
+  deleteMetaskill: (id: string) => set((state) => {
+    const newMetaskills = new Map(state.metaskills);
+    newMetaskills.delete(id);
+    return {
+      metaskills: newMetaskills,
+      activeMetaskillId: state.activeMetaskillId === id ? null : state.activeMetaskillId
+    };
+  }),
+
+  setActiveMetaskill: (id: string | null) => set({ activeMetaskillId: id }),
+
+  getActiveMetaskill: () => {
+    const state = get();
+    if (!state.activeMetaskillId) return null;
+    return state.metaskills.get(state.activeMetaskillId) || null;
+  },
+
+  getMetaskillUsageCount: (id: string) => {
+    const state = get();
+    let count = 0;
+
+    // Count usage in mobs
+    state.mobs.forEach((mob) => {
+      mob.skills?.forEach((skill) => {
+        if (skill.mechanic === 'skill' && skill.parameters?.s === id) {
+          count++;
+        }
+      });
+    });
+
+    // Count usage in other metaskills
+    state.metaskills.forEach((metaskill) => {
+      metaskill.skills.forEach((skill) => {
+        if (skill.mechanic === 'skill' && skill.parameters?.s === id) {
+          count++;
+        }
+      });
+    });
+
+    return count;
   },
 
   // Import/Export implementations

@@ -2,7 +2,11 @@ import { useProjectStore } from '../../stores/projectStore';
 import { MobEditor } from '../mob-editor/MobEditor';
 import { FileText } from 'lucide-react';
 
-export function MainCanvas() {
+interface MainCanvasProps {
+  onNavigateToMetaskill?: (metaskillId: string) => void;
+}
+
+export function MainCanvas({ onNavigateToMetaskill }: MainCanvasProps) {
   const activeMob = useProjectStore((state) => state.getActiveMob());
 
   if (!activeMob) {
@@ -17,5 +21,5 @@ export function MainCanvas() {
     );
   }
 
-  return <MobEditor mob={activeMob} />;
+  return <MobEditor mob={activeMob} onNavigateToMetaskill={onNavigateToMetaskill} />;
 }

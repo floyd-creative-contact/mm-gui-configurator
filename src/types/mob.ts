@@ -65,8 +65,23 @@ export interface MobConfig {
   levelModifiers?: string[];
 }
 
+export interface ConditionEntry {
+  condition: string;
+  value?: any;
+  action?: 'true' | 'false' | 'required' | 'cancel' | string; // Can be 'power X' too
+}
+
+export interface MetaskillConfig {
+  internalName: string;
+  cooldown?: number;
+  conditions?: ConditionEntry[];
+  targetConditions?: ConditionEntry[];
+  triggerConditions?: ConditionEntry[];
+  skills: SkillLine[];
+}
+
 export interface Project {
   name: string;
   mobs: Map<string, MobConfig>;
-  metaskills?: Map<string, any>; // For future use
+  metaskills: Map<string, MetaskillConfig>;
 }

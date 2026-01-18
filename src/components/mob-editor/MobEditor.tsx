@@ -13,6 +13,7 @@ import { OptionsTab } from './tabs/OptionsTab';
 
 interface MobEditorProps {
   mob: MobConfig;
+  onNavigateToMetaskill?: (metaskillId: string) => void;
 }
 
 type TabId = 'basic' | 'skills' | 'ai' | 'equipment' | 'drops' | 'bossbar' | 'options';
@@ -34,7 +35,7 @@ const TABS: Tab[] = [
   { id: 'options', label: 'Options', icon: Settings, component: OptionsTab },
 ];
 
-export function MobEditor({ mob }: MobEditorProps) {
+export function MobEditor({ mob, onNavigateToMetaskill }: MobEditorProps) {
   const [activeTab, setActiveTab] = useState<TabId>('basic');
 
   const ActiveTabComponent = TABS.find(t => t.id === activeTab)?.component || BasicInfoTab;
@@ -77,7 +78,11 @@ export function MobEditor({ mob }: MobEditorProps) {
 
       {/* Tab Content */}
       <div className="flex-1 overflow-auto">
-        <ActiveTabComponent mob={mob} />
+        {activeTab === 'skills' ? (
+          <SkillsTab mob={mob} onNavigateToMetaskill={onNavigateToMetaskill} />
+        ) : (
+          <ActiveTabComponent mob={mob} />
+        )}
       </div>
     </div>
   );

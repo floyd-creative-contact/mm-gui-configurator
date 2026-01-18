@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { useProjectStore } from '../../stores/projectStore';
-import { MobConfig } from '../../types/mob';
-import { Plus, Trash2 } from 'lucide-react';
+import { MobConfig, MetaskillConfig } from '../../types/mob';
+import { Plus, Trash2, FileText } from 'lucide-react';
+import { TemplateModal } from '../templates/TemplateModal';
 
 export function MobList() {
   const { mobs, activeMobId, addMob, setActiveMob, deleteMob } = useProjectStore();
   const [isCreating, setIsCreating] = useState(false);
+  const [showTemplates, setShowTemplates] = useState(false);
   const [newMobName, setNewMobName] = useState('');
 
   const mobList = Array.from(mobs.values());
@@ -41,18 +43,55 @@ export function MobList() {
     }
   };
 
+  const handleTemplateSelect = (template: MobConfig | MetaskillConfig, _templateName: string) => {
+    const templateData = template as MobConfig;
+    // Generate unique internal name
+    let baseName = templateData.internalName;
+    let counter = 1;
+    let internalName = baseName;
+
+    while (mobs.has(internalName)) {
+      internalName = `${baseName}_${counter}`;
+      counter++;
+    }
+
+    const newMob: MobConfig = {
+      ...templateData,
+      internalName,
+      display: templateData.display || _templateName
+    };
+
+    addMob(newMob);
+  };
+
   return (
     <div className="flex flex-col h-full">
+      <TemplateModal
+        type="mob"
+        isOpen={showTemplates}
+        onClose={() => setShowTemplates(false)}
+        onSelectTemplate={handleTemplateSelect}
+      />
+
       <div className="p-4 border-b border-gray-700">
         <h2 className="text-lg font-semibold mb-3">Mobs</h2>
         {!isCreating ? (
-          <button
-            onClick={() => setIsCreating(true)}
-            className="w-full px-3 py-2 bg-primary hover:bg-blue-700 rounded transition-colors text-sm flex items-center justify-center gap-2"
-          >
-            <Plus size={16} strokeWidth={2} />
-            New Mob
-          </button>
+          <div className="space-y-2">
+            <button
+              onClick={() => setIsCreating(true)}
+              className="w-full px-3 py-2 bg-primary hover:bg-blue-700 rounded transition-colors text-sm flex items-center justify-center gap-2"
+            >
+              <Plus size={16} strokeWidth={2} />
+              New Mob
+            </button>
+            <button
+              onClick={() => setShowTemplates(true)}
+              className="w-full px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded transition-colors text-sm flex items-center justify-center gap-2"
+            >
+              <FileText size={16} strokeWidth={2} />
+              From Template
+            </button>
+          </div>
         ) : (
           <div className="space-y-2">
             <input

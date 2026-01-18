@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { useProjectStore } from '../../stores/projectStore';
-import { MetaskillConfig } from '../../types/mob';
-import { Plus, Trash2, AlertCircle } from 'lucide-react';
+import { MetaskillConfig, MobConfig } from '../../types/mob';
+import { Plus, Trash2, AlertCircle, Sparkles } from 'lucide-react';
+import { TemplateModal } from '../templates/TemplateModal';
 
 export function MetaskillList() {
   const { metaskills, activeMetaskillId, addMetaskill, setActiveMetaskill, deleteMetaskill, getMetaskillUsageCount } = useProjectStore();
   const [isCreating, setIsCreating] = useState(false);
+  const [showTemplates, setShowTemplates] = useState(false);
   const [newMetaskillName, setNewMetaskillName] = useState('');
 
   const metaskillList = Array.from(metaskills.values());
@@ -48,18 +50,54 @@ export function MetaskillList() {
     deleteMetaskill(id);
   };
 
+  const handleTemplateSelect = (template: MobConfig | MetaskillConfig, _templateName: string) => {
+    const templateData = template as MetaskillConfig;
+    // Generate unique internal name
+    let baseName = templateData.internalName;
+    let counter = 1;
+    let internalName = baseName;
+
+    while (metaskills.has(internalName)) {
+      internalName = `${baseName}_${counter}`;
+      counter++;
+    }
+
+    const newMetaskill: MetaskillConfig = {
+      ...templateData,
+      internalName
+    };
+
+    addMetaskill(newMetaskill);
+  };
+
   return (
     <div className="flex flex-col h-full">
+      <TemplateModal
+        type="metaskill"
+        isOpen={showTemplates}
+        onClose={() => setShowTemplates(false)}
+        onSelectTemplate={handleTemplateSelect}
+      />
+
       <div className="p-4 border-b border-gray-700">
         <h2 className="text-lg font-semibold mb-3">Metaskills</h2>
         {!isCreating ? (
-          <button
-            onClick={() => setIsCreating(true)}
-            className="w-full px-3 py-2 bg-primary hover:bg-blue-700 rounded transition-colors text-sm flex items-center justify-center gap-2"
-          >
-            <Plus size={16} strokeWidth={2} />
-            New Metaskill
-          </button>
+          <div className="space-y-2">
+            <button
+              onClick={() => setIsCreating(true)}
+              className="w-full px-3 py-2 bg-primary hover:bg-blue-700 rounded transition-colors text-sm flex items-center justify-center gap-2"
+            >
+              <Plus size={16} strokeWidth={2} />
+              New Metaskill
+            </button>
+            <button
+              onClick={() => setShowTemplates(true)}
+              className="w-full px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded transition-colors text-sm flex items-center justify-center gap-2"
+            >
+              <Sparkles size={16} strokeWidth={2} />
+              From Template
+            </button>
+          </div>
         ) : (
           <div className="space-y-2">
             <input

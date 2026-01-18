@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Plus, Trash2, Eye } from 'lucide-react';
 import { useProjectStore } from '../../../stores/projectStore';
 import { MetaskillConfig, SkillLine } from '../../../types/mob';
+import { SkillLineEditor } from '../../common/SkillLineEditor';
 
 interface MetaskillSkillsTabProps {
   metaskill: MetaskillConfig;
@@ -112,12 +113,11 @@ export function MetaskillSkillsTab({ metaskill }: MetaskillSkillsTabProps) {
                       <label className="block text-sm font-medium mb-2">
                         Skill Line
                       </label>
-                      <textarea
+                      <SkillLineEditor
                         value={editingSkill}
-                        onChange={(e) => setEditingSkill(e.target.value)}
-                        className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded focus:outline-none focus:border-primary font-mono text-sm"
-                        rows={3}
+                        onChange={setEditingSkill}
                         placeholder="- mechanic{param=value} @targeter ~trigger"
+                        rows={3}
                       />
                       <p className="text-xs text-gray-500 mt-1">
                         Edit the raw skill line. You can use <code>&lt;skill.varname&gt;</code> for parameters.

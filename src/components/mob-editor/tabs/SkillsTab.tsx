@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Plus, Trash2, Eye, ExternalLink, AlertTriangle } from 'lucide-react';
 import { useProjectStore } from '../../../stores/projectStore';
 import { MobConfig, SkillLine } from '../../../types/mob';
+import { SkillLineEditor } from '../../common/SkillLineEditor';
 
 interface SkillsTabProps {
   mob: MobConfig;
@@ -126,12 +127,11 @@ export function SkillsTab({ mob, onNavigateToMetaskill }: SkillsTabProps) {
                       <label className="block text-sm font-medium mb-2">
                         Skill Line
                       </label>
-                      <textarea
+                      <SkillLineEditor
                         value={editingSkill}
-                        onChange={(e) => setEditingSkill(e.target.value)}
-                        className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded focus:outline-none focus:border-primary font-mono text-sm"
-                        rows={3}
+                        onChange={setEditingSkill}
                         placeholder="- mechanic{param=value} @targeter ~trigger"
+                        rows={3}
                       />
                       <p className="text-xs text-gray-500 mt-1">
                         Edit the raw skill line. Format: - mechanic{'{'}params{'}'} @targeter ~trigger

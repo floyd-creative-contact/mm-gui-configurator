@@ -4,6 +4,11 @@ import { exportMobsToYAML } from '../lib/yaml/yamlGenerator';
 import { importYAMLToMobs } from '../lib/yaml/yamlParser';
 import { validateMob, validateMetaskill, validateProject, ValidationResult } from '../lib/validation/validator';
 
+interface HistoryState {
+  mobs: Map<string, MobConfig>;
+  metaskills: Map<string, MetaskillConfig>;
+}
+
 interface ProjectState {
   // Project metadata
   projectName: string;
@@ -16,6 +21,10 @@ interface ProjectState {
   // Metaskill data
   metaskills: Map<string, MetaskillConfig>;
   activeMetaskillId: string | null;
+
+  // History for undo/redo
+  past: HistoryState[];
+  future: HistoryState[];
 
   // Mob actions
   addMob: (mob: MobConfig) => void;
@@ -40,6 +49,22 @@ interface ProjectState {
   validateMob: (id: string) => ValidationResult;
   validateMetaskill: (id: string) => ValidationResult;
   validateAll: () => { mobs: Map<string, ValidationResult>; metaskills: Map<string, ValidationResult>; canExport: boolean };
+
+  // Undo/Redo
+  undo: () => void;
+  redo: () => void;
+  canUndo: () => boolean;
+  canRedo: () => boolean;
+}
+
+const MAX_HISTORY = 50;
+
+// Helper to clone Maps deeply
+function cloneMaps(mobs: Map<string, MobConfig>, metaskills: Map<string, MetaskillConfig>): HistoryState {
+  return {
+    mobs: new Map(Array.from(mobs.entries()).map(([k, v]) => [k, { ...v }])),
+    metaskills: new Map(Array.from(metaskills.entries()).map(([k, v]) => [k, { ...v }])),
+  };
 }
 
 export const useProjectStore = create<ProjectState>((set, get) => ({
@@ -52,31 +77,51 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   metaskills: new Map<string, MetaskillConfig>(),
   activeMetaskillId: null,
 
+  past: [],
+  future: [],
+
   // Mob actions
   addMob: (mob: MobConfig) => set((state) => {
+    // Save current state to history
+    const past = [...state.past, cloneMaps(state.mobs, state.metaskills)].slice(-MAX_HISTORY);
+
     const newMobs = new Map(state.mobs);
     newMobs.set(mob.internalName, mob);
     return {
       mobs: newMobs,
-      activeMobId: mob.internalName // Auto-select newly added mob
+      activeMobId: mob.internalName, // Auto-select newly added mob
+      past,
+      future: [], // Clear future when new action is performed
     };
   }),
 
   updateMob: (id: string, updates: Partial<MobConfig>) => set((state) => {
     const newMobs = new Map(state.mobs);
     const existingMob = newMobs.get(id);
-    if (existingMob) {
-      newMobs.set(id, { ...existingMob, ...updates });
-    }
-    return { mobs: newMobs };
+    if (!existingMob) return state;
+
+    // Save current state to history
+    const past = [...state.past, cloneMaps(state.mobs, state.metaskills)].slice(-MAX_HISTORY);
+
+    newMobs.set(id, { ...existingMob, ...updates });
+    return {
+      mobs: newMobs,
+      past,
+      future: [], // Clear future when new action is performed
+    };
   }),
 
   deleteMob: (id: string) => set((state) => {
+    // Save current state to history
+    const past = [...state.past, cloneMaps(state.mobs, state.metaskills)].slice(-MAX_HISTORY);
+
     const newMobs = new Map(state.mobs);
     newMobs.delete(id);
     return {
       mobs: newMobs,
-      activeMobId: state.activeMobId === id ? null : state.activeMobId
+      activeMobId: state.activeMobId === id ? null : state.activeMobId,
+      past,
+      future: [], // Clear future when new action is performed
     };
   }),
 
@@ -90,29 +135,46 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
 
   // Metaskill actions
   addMetaskill: (metaskill: MetaskillConfig) => set((state) => {
+    // Save current state to history
+    const past = [...state.past, cloneMaps(state.mobs, state.metaskills)].slice(-MAX_HISTORY);
+
     const newMetaskills = new Map(state.metaskills);
     newMetaskills.set(metaskill.internalName, metaskill);
     return {
       metaskills: newMetaskills,
-      activeMetaskillId: metaskill.internalName // Auto-select newly added metaskill
+      activeMetaskillId: metaskill.internalName, // Auto-select newly added metaskill
+      past,
+      future: [], // Clear future when new action is performed
     };
   }),
 
   updateMetaskill: (id: string, updates: Partial<MetaskillConfig>) => set((state) => {
     const newMetaskills = new Map(state.metaskills);
     const existing = newMetaskills.get(id);
-    if (existing) {
-      newMetaskills.set(id, { ...existing, ...updates });
-    }
-    return { metaskills: newMetaskills };
+    if (!existing) return state;
+
+    // Save current state to history
+    const past = [...state.past, cloneMaps(state.mobs, state.metaskills)].slice(-MAX_HISTORY);
+
+    newMetaskills.set(id, { ...existing, ...updates });
+    return {
+      metaskills: newMetaskills,
+      past,
+      future: [], // Clear future when new action is performed
+    };
   }),
 
   deleteMetaskill: (id: string) => set((state) => {
+    // Save current state to history
+    const past = [...state.past, cloneMaps(state.mobs, state.metaskills)].slice(-MAX_HISTORY);
+
     const newMetaskills = new Map(state.metaskills);
     newMetaskills.delete(id);
     return {
       metaskills: newMetaskills,
-      activeMetaskillId: state.activeMetaskillId === id ? null : state.activeMetaskillId
+      activeMetaskillId: state.activeMetaskillId === id ? null : state.activeMetaskillId,
+      past,
+      future: [], // Clear future when new action is performed
     };
   }),
 
@@ -190,5 +252,52 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   validateAll: () => {
     const state = get();
     return validateProject(state.mobs, state.metaskills);
+  },
+
+  // Undo/Redo implementations
+  undo: () => set((state) => {
+    if (state.past.length === 0) return state;
+
+    const previous = state.past[state.past.length - 1];
+    const newPast = state.past.slice(0, state.past.length - 1);
+
+    // Save current state to future
+    const current = cloneMaps(state.mobs, state.metaskills);
+    const newFuture = [current, ...state.future].slice(0, MAX_HISTORY);
+
+    return {
+      mobs: previous.mobs,
+      metaskills: previous.metaskills,
+      past: newPast,
+      future: newFuture,
+    };
+  }),
+
+  redo: () => set((state) => {
+    if (state.future.length === 0) return state;
+
+    const next = state.future[0];
+    const newFuture = state.future.slice(1);
+
+    // Save current state to past
+    const current = cloneMaps(state.mobs, state.metaskills);
+    const newPast = [...state.past, current].slice(-MAX_HISTORY);
+
+    return {
+      mobs: next.mobs,
+      metaskills: next.metaskills,
+      past: newPast,
+      future: newFuture,
+    };
+  }),
+
+  canUndo: () => {
+    const state = get();
+    return state.past.length > 0;
+  },
+
+  canRedo: () => {
+    const state = get();
+    return state.future.length > 0;
   },
 }));

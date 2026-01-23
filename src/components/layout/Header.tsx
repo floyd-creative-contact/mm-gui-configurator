@@ -1,11 +1,37 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useProjectStore } from '../../stores/projectStore';
-import { Upload, Download, ChevronDown, FileArchive, File } from 'lucide-react';
+import { Upload, Download, ChevronDown, FileArchive, File, Undo, Redo } from 'lucide-react';
 import { downloadAsZip, exportToMultipleFiles, exportToSingleFile } from '../../lib/yaml/multiFileExport';
 
 export function Header() {
-  const { projectName, mobs, metaskills, validateAll } = useProjectStore();
+  const { projectName, mobs, metaskills, validateAll, undo, redo, canUndo, canRedo } = useProjectStore();
   const [showExportMenu, setShowExportMenu] = useState(false);
+
+  // Keyboard shortcuts for undo/redo
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ctrl+Z or Cmd+Z for undo
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        if (canUndo()) {
+          undo();
+        }
+      }
+      // Ctrl+Y or Ctrl+Shift+Z or Cmd+Shift+Z for redo
+      if (
+        ((e.ctrlKey || e.metaKey) && e.key === 'y') ||
+        ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'z')
+      ) {
+        e.preventDefault();
+        if (canRedo()) {
+          redo();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [undo, redo, canUndo, canRedo]);
 
   const checkValidationBeforeExport = (): boolean => {
     const validation = validateAll();
@@ -88,6 +114,26 @@ export function Header() {
       <div className="flex items-center gap-4">
         <h1 className="text-xl font-bold">MythicMobs GUI Editor</h1>
         <span className="text-sm text-gray-400">{projectName}</span>
+
+        {/* Undo/Redo buttons */}
+        <div className="flex items-center gap-1 ml-2">
+          <button
+            onClick={undo}
+            disabled={!canUndo()}
+            className="p-2 rounded transition-colors disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-700 disabled:hover:bg-transparent"
+            title="Undo (Ctrl+Z)"
+          >
+            <Undo size={16} strokeWidth={2} />
+          </button>
+          <button
+            onClick={redo}
+            disabled={!canRedo()}
+            className="p-2 rounded transition-colors disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-700 disabled:hover:bg-transparent"
+            title="Redo (Ctrl+Y)"
+          >
+            <Redo size={16} strokeWidth={2} />
+          </button>
+        </div>
       </div>
 
       <div className="flex items-center gap-2">

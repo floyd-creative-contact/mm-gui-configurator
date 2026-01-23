@@ -1,8 +1,10 @@
 import { useState } from 'react';
-import { Plus, Trash2, Eye, ExternalLink, AlertTriangle } from 'lucide-react';
+import { Plus, Trash2, Eye, ExternalLink, AlertTriangle, Sparkles } from 'lucide-react';
 import { useProjectStore } from '../../../stores/projectStore';
 import { MobConfig, SkillLine } from '../../../types/mob';
 import { SkillLineEditor } from '../../common/SkillLineEditor';
+import { SkillCreationWizard } from '../../wizard/SkillCreationWizard';
+import { HelpTooltip, DocLink, InfoBox } from '../../common/Tooltip';
 
 interface SkillsTabProps {
   mob: MobConfig;
@@ -14,6 +16,7 @@ export function SkillsTab({ mob, onNavigateToMetaskill }: SkillsTabProps) {
   const metaskills = useProjectStore((state) => state.metaskills);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editingSkill, setEditingSkill] = useState<string>('');
+  const [showWizard, setShowWizard] = useState(false);
 
   const skills = mob.skills || [];
 
@@ -31,6 +34,11 @@ export function SkillsTab({ mob, onNavigateToMetaskill }: SkillsTabProps) {
 
   const handleAddSkill = () => {
     const newSkills = [...skills, { mechanic: 'damage', parameters: { amount: 5 }, raw: '- damage{amount=5}' }];
+    updateMob(mob.internalName, { skills: newSkills });
+  };
+
+  const handleWizardComplete = (skill: SkillLine) => {
+    const newSkills = [...skills, skill];
     updateMob(mob.internalName, { skills: newSkills });
   };
 
@@ -95,23 +103,58 @@ export function SkillsTab({ mob, onNavigateToMetaskill }: SkillsTabProps) {
   return (
     <div className="p-6 max-w-4xl mx-auto">
       <div className="space-y-4">
+        <InfoBox type="tip">
+          <strong>Skills are abilities:</strong> Skills define what your mob can do - deal damage, heal, teleport, summon minions, etc.
+          Use the <Sparkles className="inline w-4 h-4" /> <strong>Wizard</strong> button for guided creation or <Plus className="inline w-4 h-4" /> <strong>Add Skill</strong> for manual editing.
+        </InfoBox>
+
         {/* Header */}
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold">Mob Skills</h3>
-          <button
-            onClick={handleAddSkill}
-            className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded hover:bg-primary-dark transition-colors"
-          >
-            <Plus size={16} />
-            Add Skill
-          </button>
+          <div className="flex items-center gap-2">
+            <h3 className="text-lg font-semibold">Mob Skills</h3>
+            <HelpTooltip
+              content={
+                <div>
+                  <p className="font-semibold mb-1">About Skills</p>
+                  <p>Skills are actions your mob can perform. Each skill has:</p>
+                  <ul className="mt-2 space-y-1 text-xs list-disc list-inside">
+                    <li><strong>Mechanic:</strong> The action (damage, heal, teleport, etc.)</li>
+                    <li><strong>Targeter:</strong> Who to affect (@self, @target, etc.)</li>
+                    <li><strong>Trigger:</strong> When to execute (~onSpawn, ~onAttack, etc.)</li>
+                    <li><strong>Conditions:</strong> Requirements to execute</li>
+                  </ul>
+                </div>
+              }
+            />
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowWizard(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors"
+              title="Create skill with guided wizard - recommended for beginners!"
+            >
+              <Sparkles size={16} />
+              Wizard
+            </button>
+            <button
+              onClick={handleAddSkill}
+              className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded hover:bg-primary-dark transition-colors"
+              title="Add empty skill manually - for advanced users"
+            >
+              <Plus size={16} />
+              Add Skill
+            </button>
+          </div>
         </div>
 
         {/* Skills List */}
         {skills.length === 0 ? (
-          <div className="text-center py-12 text-gray-500">
-            <p>No skills configured for this mob.</p>
-            <p className="text-sm mt-2">Click "Add Skill" to get started.</p>
+          <div className="text-center py-12 bg-gray-800 border border-gray-700 rounded-lg">
+            <p className="text-gray-400">No skills configured for this mob.</p>
+            <p className="text-sm mt-2 text-gray-500">Click <Sparkles className="inline w-4 h-4" /> <strong>Wizard</strong> for a guided setup!</p>
+            <div className="mt-4">
+              <DocLink url="https://git.lumine.io/mythiccraft/MythicMobs/-/wikis/Skills/Mechanics" label="Browse All Mechanics" />
+            </div>
           </div>
         ) : (
           <div className="space-y-3">
@@ -247,20 +290,63 @@ export function SkillsTab({ mob, onNavigateToMetaskill }: SkillsTabProps) {
         )}
 
         {/* Help Text */}
-        <div className="mt-6 p-4 bg-gray-800 border border-gray-700 rounded">
-          <h4 className="text-sm font-semibold mb-2">Skill Line Format</h4>
-          <div className="text-xs text-gray-400 space-y-1">
-            <p><code className="text-purple-400">- mechanic{'{'}param=value{'}'}</code> - The skill mechanic with parameters</p>
-            <p><code className="text-cyan-400">@targeter{'{'}options{'}'}</code> - Optional targeter</p>
-            <p><code className="text-green-400">~trigger</code> - Optional trigger</p>
-            <p><code className="text-red-400">&lt;50%</code> - Optional health modifier</p>
-            <p><code className="text-yellow-400">0.5</code> - Optional chance (0.0-1.0)</p>
+        <div className="mt-6 space-y-4">
+          <div className="p-4 bg-gray-800 border border-gray-700 rounded">
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="text-sm font-semibold flex items-center gap-2">
+                Skill Line Format
+                <HelpTooltip
+                  content={
+                    <div>
+                      <p>Skills are written in a specific format. Each part is color-coded below to help you understand.</p>
+                      <p className="mt-2 text-xs">Tip: Use autocomplete when editing - type <code>-</code> for mechanics, <code>@</code> for targeters, <code>~</code> for triggers!</p>
+                    </div>
+                  }
+                />
+              </h4>
+              <DocLink url="https://git.lumine.io/mythiccraft/MythicMobs/-/wikis/Skills/Skills" label="Skills Guide" />
+            </div>
+            <div className="text-xs text-gray-400 space-y-1">
+              <p><code className="text-purple-400">- mechanic{'{'}param=value{'}'}</code> - The skill mechanic with parameters</p>
+              <p><code className="text-cyan-400">@targeter{'{'}options{'}'}</code> - Optional targeter (who/what to affect)</p>
+              <p><code className="text-green-400">~trigger</code> - Optional trigger (when to execute)</p>
+              <p><code className="text-red-400">&lt;50%</code> - Optional health modifier (only when health condition met)</p>
+              <p><code className="text-yellow-400">0.5</code> - Optional chance (0.0-1.0, probability of execution)</p>
+            </div>
+            <p className="text-xs text-gray-500 mt-3">
+              Example: <code className="text-gray-300 bg-gray-900 px-2 py-1 rounded">- damage{'{'}amount=10{'}'} @PIR{'{'}r=5{'}'} ~onAttack &lt;50% 0.8</code>
+            </p>
+            <p className="text-xs text-gray-500 mt-1">
+              Translation: Deal 10 damage to all players in 5 block radius when attacking, only when below 50% health, with 80% chance
+            </p>
           </div>
-          <p className="text-xs text-gray-500 mt-3">
-            Example: <code className="text-gray-300">- damage{'{'}amount=10{'}'} @PIR{'{'}r=5{'}'} ~onAttack &lt;50% 0.8</code>
-          </p>
+
+          <div className="grid grid-cols-3 gap-4">
+            <InfoBox type="info" className="text-xs">
+              <strong>100+ Mechanics</strong>
+              <p className="mt-1">damage, heal, teleport, particles, sound, and many more!</p>
+              <DocLink url="https://git.lumine.io/mythiccraft/MythicMobs/-/wikis/Skills/Mechanics" label="Browse All" className="mt-2 text-xs" />
+            </InfoBox>
+            <InfoBox type="info" className="text-xs">
+              <strong>30+ Targeters</strong>
+              <p className="mt-1">@self, @target, @PIR, @EIR, @trigger, and more!</p>
+              <DocLink url="https://git.lumine.io/mythiccraft/MythicMobs/-/wikis/Skills/Targeters" label="Browse All" className="mt-2 text-xs" />
+            </InfoBox>
+            <InfoBox type="info" className="text-xs">
+              <strong>40+ Triggers</strong>
+              <p className="mt-1">~onSpawn, ~onAttack, ~onTimer, ~onDeath, etc.</p>
+              <DocLink url="https://git.lumine.io/mythiccraft/MythicMobs/-/wikis/Skills/Triggers" label="Browse All" className="mt-2 text-xs" />
+            </InfoBox>
+          </div>
         </div>
       </div>
+
+      {/* Skill Creation Wizard */}
+      <SkillCreationWizard
+        isOpen={showWizard}
+        onClose={() => setShowWizard(false)}
+        onComplete={handleWizardComplete}
+      />
     </div>
   );
 }

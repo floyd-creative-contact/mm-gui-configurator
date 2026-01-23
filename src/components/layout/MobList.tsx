@@ -4,9 +4,10 @@ import { MobConfig, MetaskillConfig } from '../../types/mob';
 import { Trash2, FileText, Wand2 } from 'lucide-react';
 import { TemplateModal } from '../templates/TemplateModal';
 import { MobCreationWizard } from '../wizard/MobCreationWizard';
+import { ValidationBadge } from '../common/ValidationPanel';
 
 export function MobList() {
-  const { mobs, activeMobId, addMob, setActiveMob, deleteMob } = useProjectStore();
+  const { mobs, activeMobId, addMob, setActiveMob, deleteMob, validateMob } = useProjectStore();
   const [showTemplates, setShowTemplates] = useState(false);
   const [showWizard, setShowWizard] = useState(false);
 
@@ -104,8 +105,9 @@ export function MobList() {
               >
                 <div className="flex items-center justify-between">
                   <div className="flex-1 min-w-0">
-                    <div className="font-medium truncate">
-                      {mob.display || mob.internalName}
+                    <div className="font-medium truncate flex items-center gap-2">
+                      <span className="truncate">{mob.display || mob.internalName}</span>
+                      <ValidationBadge result={validateMob(mob.internalName)} />
                     </div>
                     <div className="text-xs text-gray-400 truncate">
                       {mob.type}

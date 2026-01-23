@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { MobConfig, MetaskillConfig } from '../types/mob';
 import { exportMobsToYAML } from '../lib/yaml/yamlGenerator';
 import { importYAMLToMobs } from '../lib/yaml/yamlParser';
+import { validateMob, validateMetaskill, validateProject, ValidationResult } from '../lib/validation/validator';
 
 interface ProjectState {
   // Project metadata
@@ -34,6 +35,11 @@ interface ProjectState {
   // Import/Export
   importYAML: (yaml: string) => void;
   exportYAML: () => string;
+
+  // Validation
+  validateMob: (id: string) => ValidationResult;
+  validateMetaskill: (id: string) => ValidationResult;
+  validateAll: () => { mobs: Map<string, ValidationResult>; metaskills: Map<string, ValidationResult>; canExport: boolean };
 }
 
 export const useProjectStore = create<ProjectState>((set, get) => ({
@@ -160,5 +166,29 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   exportYAML: () => {
     const state = get();
     return exportMobsToYAML(state.mobs);
+  },
+
+  // Validation implementations
+  validateMob: (id: string) => {
+    const state = get();
+    const mob = state.mobs.get(id);
+    if (!mob) {
+      return { valid: false, issues: [], errors: [], warnings: [], info: [] };
+    }
+    return validateMob(mob, state.mobs, state.metaskills);
+  },
+
+  validateMetaskill: (id: string) => {
+    const state = get();
+    const metaskill = state.metaskills.get(id);
+    if (!metaskill) {
+      return { valid: false, issues: [], errors: [], warnings: [], info: [] };
+    }
+    return validateMetaskill(metaskill, state.metaskills);
+  },
+
+  validateAll: () => {
+    const state = get();
+    return validateProject(state.mobs, state.metaskills);
   },
 }));

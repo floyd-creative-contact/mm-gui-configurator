@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { MobConfig } from '../../types/mob';
 import { Info, Wand2, Brain, Shield, Gift, Crown, Settings } from 'lucide-react';
+import { useProjectStore } from '../../stores/projectStore';
+import { ValidationPanel } from '../common/ValidationPanel';
 
 // Import tab components
 import { BasicInfoTab } from './tabs/BasicInfoTab';
@@ -37,19 +39,31 @@ const TABS: Tab[] = [
 
 export function MobEditor({ mob, onNavigateToMetaskill }: MobEditorProps) {
   const [activeTab, setActiveTab] = useState<TabId>('basic');
+  const validateMob = useProjectStore(state => state.validateMob);
 
   const ActiveTabComponent = TABS.find(t => t.id === activeTab)?.component || BasicInfoTab;
+  const validationResult = validateMob(mob.internalName);
 
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="p-6 border-b border-gray-700">
-        <h2 className="text-2xl font-bold">
-          Editing: {mob.display || mob.internalName}
-        </h2>
-        <p className="text-sm text-gray-400 mt-1">
-          Internal Name: <span className="font-mono text-gray-300">{mob.internalName}</span>
-        </p>
+      <div className="p-6 border-b border-gray-700 space-y-4">
+        <div>
+          <h2 className="text-2xl font-bold">
+            Editing: {mob.display || mob.internalName}
+          </h2>
+          <p className="text-sm text-gray-400 mt-1">
+            Internal Name: <span className="font-mono text-gray-300">{mob.internalName}</span>
+          </p>
+        </div>
+
+        {/* Validation Panel */}
+        {validationResult.issues.length > 0 && (
+          <ValidationPanel
+            result={validationResult}
+            entityName={mob.display || mob.internalName}
+          />
+        )}
       </div>
 
       {/* Tabs */}

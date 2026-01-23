@@ -4,10 +4,35 @@ import { Upload, Download, ChevronDown, FileArchive, File } from 'lucide-react';
 import { downloadAsZip, exportToMultipleFiles, exportToSingleFile } from '../../lib/yaml/multiFileExport';
 
 export function Header() {
-  const { projectName, mobs, metaskills } = useProjectStore();
+  const { projectName, mobs, metaskills, validateAll } = useProjectStore();
   const [showExportMenu, setShowExportMenu] = useState(false);
 
+  const checkValidationBeforeExport = (): boolean => {
+    const validation = validateAll();
+
+    if (!validation.canExport) {
+      const errorCount = Array.from(validation.mobs.values())
+        .concat(Array.from(validation.metaskills.values()))
+        .reduce((sum, result) => sum + result.errors.length, 0);
+
+      const proceed = confirm(
+        `Your configuration has ${errorCount} error${errorCount !== 1 ? 's' : ''} that may cause issues in-game.\n\n` +
+        `Do you want to export anyway?\n\n` +
+        `Tip: Check the validation indicators (red badges) in the mob/metaskill lists to see what needs fixing.`
+      );
+
+      if (!proceed) {
+        setShowExportMenu(false);
+        return false;
+      }
+    }
+
+    return true;
+  };
+
   const handleExportSingleFile = () => {
+    if (!checkValidationBeforeExport()) return;
+
     const yaml = exportToSingleFile(mobs, metaskills);
     if (!yaml) {
       alert('No mobs or metaskills to export!');
@@ -28,6 +53,8 @@ export function Header() {
   };
 
   const handleExportMultiFile = async () => {
+    if (!checkValidationBeforeExport()) return;
+
     if (mobs.size === 0 && metaskills.size === 0) {
       alert('No mobs or metaskills to export!');
       return;

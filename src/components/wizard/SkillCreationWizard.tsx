@@ -2,11 +2,7 @@ import { useState } from 'react';
 import { X, ChevronRight, ChevronLeft, Check, Sparkles } from 'lucide-react';
 import { SkillLine } from '../../types/mob';
 import {
-  getAllMechanicNames,
-  getAllTargeterNames,
-  getAllTriggerNames,
   getMechanic,
-  getTargeter,
 } from '../../lib/schema/schemaLoader';
 
 interface SkillWizardProps {

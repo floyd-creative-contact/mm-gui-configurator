@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { X, ChevronRight, ChevronLeft, Check, Wand2 } from 'lucide-react';
-import { MetaskillConfig, SkillLine } from '../../types/mob';
+import { MetaskillConfig } from '../../types/mob';
 
 interface MetaskillWizardProps {
   isOpen: boolean;
@@ -8,12 +8,11 @@ interface MetaskillWizardProps {
   onComplete: (metaskill: MetaskillConfig) => void;
 }
 
-type Step = 'name' | 'settings' | 'description' | 'review';
+type Step = 'name' | 'settings' | 'review';
 
 const STEPS: { id: Step; title: string; description: string }[] = [
   { id: 'name', title: 'Name', description: 'Choose a unique identifier' },
   { id: 'settings', title: 'Settings', description: 'Configure cooldown and behavior' },
-  { id: 'description', title: 'Description', description: 'Add notes (optional)' },
   { id: 'review', title: 'Review', description: 'Confirm and create' },
 ];
 
@@ -196,27 +195,6 @@ export function MetaskillCreationWizard({ isOpen, onClose, onComplete }: Metaski
             </div>
           )}
 
-          {currentStep === 'description' && (
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Add Description</h3>
-              <p className="text-sm text-gray-400">
-                Add notes about what this metaskill does. This is optional but helps you remember its purpose.
-              </p>
-
-              <textarea
-                value={metaskillData.description || ''}
-                onChange={(e) => setMetaskillData({ ...metaskillData, description: e.target.value })}
-                placeholder="e.g., A powerful fire attack that deals damage and applies a burning effect"
-                rows={5}
-                className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:border-indigo-500"
-              />
-
-              <div className="p-3 bg-blue-900/30 border border-blue-700 rounded text-sm">
-                <strong>Tip:</strong> Include information about what mobs use this skill, when it's triggered, or any special conditions.
-              </div>
-            </div>
-          )}
-
           {currentStep === 'review' && (
             <div className="space-y-6">
               <h3 className="text-lg font-semibold">Review Your Metaskill</h3>
@@ -234,13 +212,6 @@ export function MetaskillCreationWizard({ isOpen, onClose, onComplete }: Metaski
                   <div>
                     <div className="text-xs text-gray-400 mb-1">Cooldown</div>
                     <div className="font-semibold">{metaskillData.cooldown} seconds</div>
-                  </div>
-                )}
-
-                {metaskillData.description && (
-                  <div>
-                    <div className="text-xs text-gray-400 mb-1">Description</div>
-                    <div className="text-sm text-gray-300">{metaskillData.description}</div>
                   </div>
                 )}
               </div>
